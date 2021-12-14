@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
+using System.ComponentModel;
 using Conductor.Domain.Interfaces;
 using Conductor.Domain.Models;
 using Newtonsoft.Json.Linq;
@@ -40,7 +39,7 @@ namespace Conductor.Domain.Services
         private WorkflowDefinition Convert(Definition source)
         {
             var dataType = typeof(ExpandoObject);
-            
+
             var result = new WorkflowDefinition
             {
                 Id = source.Id,
@@ -196,7 +195,7 @@ namespace Conductor.Domain.Services
                 throw new ArgumentException($"Unknown type for input {input.Key} on {source.Id}");
             }
         }
-        
+
         private void AttachOutputs(Step source, Type dataType, Type stepType, WorkflowStep step)
         {
             foreach (var output in source.Outputs)
@@ -214,12 +213,12 @@ namespace Conductor.Domain.Services
                 step.Outputs.Add(new ActionParameter<IStepBody, object>(acn));
             }
         }
-        
+
         private void AttachOutcomes(Step source, Type dataType, WorkflowStep step)
-        {            
+        {
             if (!string.IsNullOrEmpty(source.NextStepId))
                 step.Outcomes.Add(new ValueOutcome() { ExternalNextStepId = $"{source.NextStepId}" });
-            
+
             foreach (var nextStep in source.SelectNextStep)
             {
                 Expression<Func<ExpandoObject, object, bool>> sourceExpr = (data, outcome) => _expressionEvaluator.EvaluateOutcomeExpression(nextStep.Value, data, outcome);
@@ -229,7 +228,7 @@ namespace Conductor.Domain.Services
                 });
             }
         }
-              
+                
         private Type FindType(string name)
         {
             name = name.Trim();
@@ -252,7 +251,7 @@ namespace Conductor.Domain.Services
         private Action<IStepBody, object, IStepExecutionContext> BuildScalarInputAction(KeyValuePair<string, object> input, PropertyInfo stepProperty)
         {
             var sourceExpr = System.Convert.ToString(input.Value);
-            
+
             void acn(IStepBody pStep, object pData, IStepExecutionContext pContext)
             {
                 var resolvedValue = _expressionEvaluator.EvaluateExpression(sourceExpr, pData, pContext);
@@ -274,16 +273,24 @@ namespace Conductor.Domain.Services
                     else
                     {
                         if ((resolvedValue != null) && (stepProperty.PropertyType.IsAssignableFrom(resolvedValue.GetType())))
+                        {
                             stepProperty.SetValue(pStep, resolvedValue);
+                        }
                         else
-                            stepProperty.SetValue(pStep, System.Convert.ChangeType(resolvedValue, stepProperty.PropertyType));
-                    }                    
+                        {
+                            var converter = TypeDescriptor.GetConverter(stepProperty.PropertyType);
+                            var convertedResolvedValue = converter.CanConvertFrom(resolvedValue.GetType())
+                                ? converter.ConvertFrom(resolvedValue)
+                                : System.Convert.ChangeType(resolvedValue, stepProperty.PropertyType);
+                            stepProperty.SetValue(pStep, convertedResolvedValue);
+                        }
+                    }
                 }
             }
             return acn;
         }
 
-        
+
 
         private Action<IStepBody, object, IStepExecutionContext> BuildObjectInputAction(KeyValuePair<string, object> input, PropertyInfo stepProperty)
         {
@@ -301,7 +308,7 @@ namespace Conductor.Domain.Services
                         if (prop.Name.StartsWith("@"))
                         {
                             var sourceExpr = prop.Value.ToString();
-                            var resolvedValue = _expressionEvaluator.EvaluateExpression(sourceExpr, pData, pContext);;
+                            var resolvedValue = _expressionEvaluator.EvaluateExpression(sourceExpr, pData, pContext);
                             subobj.Remove(prop.Name);
                             subobj.Add(prop.Name.TrimStart('@'), JToken.FromObject(resolvedValue));
                         }
@@ -315,6 +322,6 @@ namespace Conductor.Domain.Services
             }
             return acn;
         }
-        
+
     }
 }

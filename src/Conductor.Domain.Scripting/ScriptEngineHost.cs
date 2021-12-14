@@ -30,6 +30,9 @@ namespace Conductor.Domain.Scripting
             var engine = _engineFactory.GetExpressionEngine();
             var source = engine.CreateScriptSourceFromString(expression, SourceCodeKind.Expression);
             var scope = engine.CreateScope(inputs);
+
+            IronPython.Hosting.Python.ImportModule(scope: scope, "datetime");
+
             return source.Execute(scope);
         }
 
