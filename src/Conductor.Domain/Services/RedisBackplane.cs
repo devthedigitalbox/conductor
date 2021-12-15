@@ -32,9 +32,18 @@ namespace Conductor.Domain.Services
 
         public async Task Start()
         {
-            _multiplexer = await ConnectionMultiplexer.ConnectAsync(_connectionString);
+            var co = new ConfigurationOptions()
+            {
+                EndPoints = 
+                { 
+                    { _connectionString, 6379 }
+                }
+            };
+
+            _multiplexer = await ConnectionMultiplexer.ConnectAsync(co);
             _subscriber = _multiplexer.GetSubscriber();
-            _subscriber.Subscribe(_channel, (channel, message) => {
+            _subscriber.Subscribe(_channel, (channel, message) =>
+            {
                 var evt = JsonConvert.DeserializeObject(message, _serializerSettings);
                 //TODO: split out future commands
                 if (evt is NewDefinitionCommand)
@@ -43,7 +52,7 @@ namespace Conductor.Domain.Services
                     {
                         if ((evt as NewDefinitionCommand).Originator == _nodeId)
                             return;
-                        var def =_repository.Find((evt as NewDefinitionCommand).DefinitionId, (evt as NewDefinitionCommand).Version);
+                        var def = _repository.Find((evt as NewDefinitionCommand).DefinitionId, (evt as NewDefinitionCommand).Version);
                         _loader.LoadDefinition(def);
                     }
                     catch (Exception ex)
