@@ -16,6 +16,8 @@ namespace Conductor.Domain.Models
         public string Name { get; set; }
 
         public string CancelCondition { get; set; }
+        
+        public bool ProceedOnCancel { get; set; } = false;
 
         public WorkflowErrorHandling? ErrorBehavior { get; set; }
 

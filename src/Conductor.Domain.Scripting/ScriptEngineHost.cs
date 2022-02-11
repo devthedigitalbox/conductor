@@ -32,6 +32,7 @@ namespace Conductor.Domain.Scripting
             var scope = engine.CreateScope(inputs);
 
             IronPython.Hosting.Python.ImportModule(scope: scope, "datetime");
+            IronPython.Hosting.Python.ImportModule(scope: scope, "time");
 
             return source.Execute(scope);
         }

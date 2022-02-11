@@ -97,6 +97,7 @@ namespace Conductor.Domain.Services
                 targetStep.ErrorBehavior = nextStep.ErrorBehavior;
                 targetStep.RetryInterval = nextStep.RetryInterval;
                 targetStep.ExternalId = $"{nextStep.Id}";
+                targetStep.ProceedOnCancel = nextStep.ProceedOnCancel;
 
                 AttachInputs(nextStep, dataType, stepType, targetStep);
                 AttachOutputs(nextStep, dataType, stepType, targetStep);
@@ -208,6 +209,36 @@ namespace Conductor.Domain.Services
                         ["data"] = pData
                     });
                     (pData as IDictionary<string, object>)[output.Key] = resolvedValue;
+                };
+
+                step.Outputs.Add(new ActionParameter<IStepBody, object>(acn));
+            }
+
+            if(!string.IsNullOrEmpty(source.NextStepId))
+            {
+                Action<IStepBody, object> acn = (pStep, pData) =>
+                {
+                    object resolvedValue = _scriptHost.EvaluateExpression("time.time()", new Dictionary<string, object>()
+                    {
+                        ["step"] = pStep,
+                        ["data"] = pData
+                    });
+                    (pData as IDictionary<string, object>)[$"ExecutionTimestamps_{source.NextStepId}"] = resolvedValue;
+                };
+
+                step.Outputs.Add(new ActionParameter<IStepBody, object>(acn));
+            }
+
+            foreach (var nextStep in source.SelectNextStep)
+            {
+                Action<IStepBody, object> acn = (pStep, pData) =>
+                {
+                    object resolvedValue = _scriptHost.EvaluateExpression("time.time()", new Dictionary<string, object>()
+                    {
+                        ["step"] = pStep,
+                        ["data"] = pData
+                    });
+                    (pData as IDictionary<string, object>)[$"ExecutionTimestamps_{nextStep.Key}"] = resolvedValue;
                 };
 
                 step.Outputs.Add(new ActionParameter<IStepBody, object>(acn));

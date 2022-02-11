@@ -129,10 +129,16 @@ namespace Conductor.Storage.Services
         {
             var now = asAt.ToUniversalTime().Ticks;
             var query = WorkflowInstances
-                .Find(x => x.NextExecution.HasValue && (x.NextExecution <= now) && (x.Status == WorkflowStatus.Runnable))
+                .Find(x => 
+                    (
+                        (x.NextExecution.HasValue && x.NextExecution <= now) 
+                        || x.ExecutionPointers.Any(p => p.Status == PointerStatus.WaitingForEvent && p.EventName != "WorkflowCore.Activity")
+                    )
+                    && x.Status == WorkflowStatus.Runnable
+                )
                 .Project(x => x.Id);
 
-            return await query.ToListAsync();
+            return await query.ToListAsync();            
         }
 
         public async Task<WorkflowInstance> GetWorkflowInstance(string Id)
