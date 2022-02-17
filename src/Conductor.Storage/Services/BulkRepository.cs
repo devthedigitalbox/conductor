@@ -29,7 +29,7 @@ namespace Conductor.Storage.Services
             _database = database;
         }
 
-        public IEnumerable<string> GetAllInstanceIds(string workflowId, params WorkflowStatus[] status)
+        public async Task<IEnumerable<string>> GetAllInstanceIds(string workflowId, params WorkflowStatus[] status)
         {
             var filterDefinition = Builders<WorkflowInstance>.Filter.Eq(w => w.WorkflowDefinitionId, workflowId);
             if (status != default && status.Any())
@@ -40,7 +40,7 @@ namespace Conductor.Storage.Services
             }
 
             var results = _collection.Find(filterDefinition).Project(w => w.Id);
-            return results.ToList();
+            return await results.ToListAsync();
         }
     }
 }
