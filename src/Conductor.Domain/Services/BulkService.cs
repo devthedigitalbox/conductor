@@ -34,7 +34,7 @@ namespace Conductor.Domain.Services
 
         public async Task<bool> SuspendWorkflows(string workflowId)
         {
-            var instanceIds = _repository.GetAllInstanceIds(workflowId, WorkflowStatus.Runnable);
+            var instanceIds = await _repository.GetAllInstanceIds(workflowId, WorkflowStatus.Runnable);
             var tasks = instanceIds.Select(id => Task.Run(async () => await _workflowController.SuspendWorkflow(id)));
             var results = await Task.WhenAll(tasks);
             return !results.Contains(false);
@@ -42,7 +42,7 @@ namespace Conductor.Domain.Services
 
         public async Task<bool> ResumeWorkflows(string workflowId)
         {
-            var instanceIds = _repository.GetAllInstanceIds(workflowId, WorkflowStatus.Suspended);
+            var instanceIds = await _repository.GetAllInstanceIds(workflowId, WorkflowStatus.Suspended);
             var tasks = instanceIds.Select(id => Task.Run(async () => await _workflowController.ResumeWorkflow(id)));
             var results = await Task.WhenAll(tasks);
             return !results.Contains(false);
@@ -50,7 +50,7 @@ namespace Conductor.Domain.Services
 
         public async Task<bool> TerminateWorkflows(string workflowId)
         {
-            var instanceIds = _repository.GetAllInstanceIds(workflowId, WorkflowStatus.Runnable, WorkflowStatus.Suspended);
+            var instanceIds = await _repository.GetAllInstanceIds(workflowId, WorkflowStatus.Runnable, WorkflowStatus.Suspended);
             var tasks = instanceIds.Select(id => Task.Run(async () => await _workflowController.TerminateWorkflow(id)));
             var results = await Task.WhenAll(tasks);
             return !results.Contains(false);
