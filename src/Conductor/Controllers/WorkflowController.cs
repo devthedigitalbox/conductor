@@ -53,23 +53,6 @@ namespace Conductor.Controllers
             return Created(instanceId, _mapper.Map<WorkflowInstance>(result));
         }
 
-        [HttpPost("{id}/bulk")]
-        [Authorize(Policy = Policies.Controller)]
-        public async Task<ActionResult<IEnumerable<WorkflowInstance>>> PostBulk(string id, [FromBody] IEnumerable<ExpandoObject> data)
-        {
-            var tasks = data.Select(d =>
-            {
-                return Task.Run(async () =>
-                {
-                    var instanceId = await _workflowController.StartWorkflow(id, d);
-                    return instanceId;
-                });
-            });
-            var values = await Task.WhenAll(tasks);
-
-            return Created("", values);
-        }
-
         [HttpPut("{id}/suspend")]
         [Authorize(Policy = Policies.Controller)]
         public async Task Suspend(string id)
