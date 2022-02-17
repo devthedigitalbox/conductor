@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Conductor.Domain.Interfaces
 {
-    public interface IWorkflowBulkService
+    public interface IBulkService
     {
         Task<IEnumerable<string>> StartWorkflows(string workflowId, IEnumerable<object> data = null);
         Task<bool> SuspendWorkflows(string workflowId);

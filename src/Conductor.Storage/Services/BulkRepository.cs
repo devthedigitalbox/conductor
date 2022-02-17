@@ -16,15 +16,15 @@ using System.Threading.Tasks;
 
 namespace Conductor.Storage.Services
 {
-    public class WorkflowBulkRepository : IWorkflowBulkRepository
+    public class BulkRepository : IBulkRepository
     {
         private readonly IMongoDatabase _database;
 
         private IMongoCollection<WorkflowInstance> _collection => _database.GetCollection<WorkflowInstance>("Workflows");
 
-        static WorkflowBulkRepository() { }
+        static BulkRepository() { }
 
-        public WorkflowBulkRepository(IMongoDatabase database)
+        public BulkRepository(IMongoDatabase database)
         {
             _database = database;
         }
@@ -32,7 +32,7 @@ namespace Conductor.Storage.Services
         public IEnumerable<string> GetAllInstanceIds(string workflowId, params WorkflowStatus[] status)
         {
             var filterDefinition = Builders<WorkflowInstance>.Filter.Eq(w => w.WorkflowDefinitionId, workflowId);
-            if(status != default && status.Any())
+            if (status != default && status.Any())
             {
                 filterDefinition &= Builders<WorkflowInstance>.Filter.Or(
                     status.Select(s => Builders<WorkflowInstance>.Filter.Eq(w => w.Status, s))

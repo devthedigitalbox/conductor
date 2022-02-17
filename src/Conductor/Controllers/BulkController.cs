@@ -19,20 +19,20 @@ namespace Conductor.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class WorkflowBulkController : ControllerBase
+    public class BulkController : ControllerBase
     {
-        private readonly IWorkflowBulkService _workflowBulkService;
+        private readonly IBulkService _bulkService;
 
-        public WorkflowBulkController(IWorkflowBulkService workflowBulkService)
+        public BulkController(IBulkService workflowBulkService)
         {
-            _workflowBulkService = workflowBulkService;
+            _bulkService = workflowBulkService;
         }
 
         [HttpPost("{id}")]
         [Authorize(Policy = Policies.Controller)]
         public async Task<IActionResult> Post(string id, [FromBody] IEnumerable<ExpandoObject> data)
         {
-            var result = await _workflowBulkService.StartWorkflows(id, data);
+            var result = await _bulkService.StartWorkflows(id, data);
             return Ok(result);
         }
 
@@ -40,7 +40,7 @@ namespace Conductor.Controllers
         [Authorize(Policy = Policies.Controller)]
         public async Task<IActionResult> Suspend(string id)
         {
-            var result = await _workflowBulkService.SuspendWorkflows(id);
+            var result = await _bulkService.SuspendWorkflows(id);
             if (result)
                 return Ok();
             else
@@ -51,7 +51,7 @@ namespace Conductor.Controllers
         [Authorize(Policy = Policies.Controller)]
         public async Task<IActionResult> Resume(string id)
         {
-            var result = await _workflowBulkService.ResumeWorkflows(id);
+            var result = await _bulkService.ResumeWorkflows(id);
             if (result)
                 return Ok();
             else
@@ -62,7 +62,7 @@ namespace Conductor.Controllers
         [Authorize(Policy = Policies.Controller)]
         public async Task<IActionResult> Terminate(string id)
         {
-            var result = await _workflowBulkService.TerminateWorkflows(id);
+            var result = await _bulkService.TerminateWorkflows(id);
             if (result)
                 return Ok();
             else
