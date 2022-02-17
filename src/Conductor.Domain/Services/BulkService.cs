@@ -25,10 +25,11 @@ namespace Conductor.Domain.Services
             _logger = loggerFactory.CreateLogger(GetType());
         }
 
-        public async Task<IEnumerable<string>> StartWorkflows(string workflowId, IEnumerable<object> data = null)
+        public async Task<bool> StartWorkflows(string workflowId, IEnumerable<object> data)
         {
             var tasks = data.Select(d => Task.Run(async () => await _workflowController.StartWorkflow(workflowId, d)));
-            return await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
+            return true;
         }
 
         public async Task<bool> SuspendWorkflows(string workflowId)

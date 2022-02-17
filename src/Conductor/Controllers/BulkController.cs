@@ -30,10 +30,16 @@ namespace Conductor.Controllers
 
         [HttpPost("{id}")]
         [Authorize(Policy = Policies.Controller)]
-        public async Task<IActionResult> Post(string id, [FromBody] IEnumerable<ExpandoObject> data)
+        public async Task<IActionResult> Post(string id, [FromBody] BulkPostPayload payload)
         {
-            var result = await _bulkService.StartWorkflows(id, data);
-            return Ok(result);
+            if (payload?.Data?.Any() != true)
+                return BadRequest();
+
+            var result = await _bulkService.StartWorkflows(id, payload.Data);
+            if (result)
+                return NoContent();
+            else
+                return BadRequest();
         }
 
         [HttpPut("{id}/suspend")]
@@ -42,7 +48,7 @@ namespace Conductor.Controllers
         {
             var result = await _bulkService.SuspendWorkflows(id);
             if (result)
-                return Ok();
+                return NoContent();
             else
                 return BadRequest();
         }
@@ -53,7 +59,7 @@ namespace Conductor.Controllers
         {
             var result = await _bulkService.ResumeWorkflows(id);
             if (result)
-                return Ok();
+                return NoContent();
             else
                 return BadRequest();
         }
@@ -64,7 +70,7 @@ namespace Conductor.Controllers
         {
             var result = await _bulkService.TerminateWorkflows(id);
             if (result)
-                return Ok();
+                return NoContent();
             else
                 return BadRequest();
         }
