@@ -64,7 +64,7 @@ namespace Conductor.Controllers
                 return BadRequest();
         }
 
-        [HttpDelete("{id}")]
+        [HttpPut("{id}/terminate")]
         [Authorize(Policy = Policies.Controller)]
         public async Task<IActionResult> Terminate(string id)
         {
