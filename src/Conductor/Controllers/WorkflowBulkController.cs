@@ -16,17 +16,16 @@ using WorkflowCore.Interface;
 
 namespace Conductor.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/workflow-bulk")]
     [ApiController]
     [Authorize]
-    [Obsolete]
-    public class BulkController : ControllerBase
+    public class WorkflowBulkController : ControllerBase
     {
-        private readonly IWorkflowBulkService _workflowBulkService;
+        private readonly IWorkflowBulkService _bulkService;
 
-        public BulkController(IWorkflowBulkService workflowBulkService)
+        public WorkflowBulkController(IWorkflowBulkService workflowBulkService)
         {
-            _workflowBulkService = workflowBulkService;
+            _bulkService = workflowBulkService;
         }
 
         [HttpPost("{id}")]
@@ -36,7 +35,7 @@ namespace Conductor.Controllers
             if (payload?.Data?.Any() != true)
                 return BadRequest();
 
-            var result = await _workflowBulkService.StartWorkflows(id, payload.Data);
+            var result = await _bulkService.StartWorkflows(id, payload.Data);
             if (result)
                 return NoContent();
             else
@@ -47,7 +46,7 @@ namespace Conductor.Controllers
         [Authorize(Policy = Policies.Controller)]
         public async Task<IActionResult> Suspend(string id)
         {
-            var result = await _workflowBulkService.SuspendWorkflows(id);
+            var result = await _bulkService.SuspendWorkflows(id);
             if (result)
                 return NoContent();
             else
@@ -58,7 +57,7 @@ namespace Conductor.Controllers
         [Authorize(Policy = Policies.Controller)]
         public async Task<IActionResult> Resume(string id)
         {
-            var result = await _workflowBulkService.ResumeWorkflows(id);
+            var result = await _bulkService.ResumeWorkflows(id);
             if (result)
                 return NoContent();
             else
@@ -69,7 +68,7 @@ namespace Conductor.Controllers
         [Authorize(Policy = Policies.Controller)]
         public async Task<IActionResult> Terminate(string id)
         {
-            var result = await _workflowBulkService.TerminateWorkflows(id);
+            var result = await _bulkService.TerminateWorkflows(id);
             if (result)
                 return NoContent();
             else

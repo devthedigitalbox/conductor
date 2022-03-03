@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Conductor.Models
 {
-    public class BulkPostPayload
+    public class WorkflowBulkPostPayload
     {
         public IEnumerable<ExpandoObject> Data { get; set; }
     }

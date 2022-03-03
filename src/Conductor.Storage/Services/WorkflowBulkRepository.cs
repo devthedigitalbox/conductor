@@ -16,15 +16,15 @@ using System.Threading.Tasks;
 
 namespace Conductor.Storage.Services
 {
-    public class BulkRepository : IBulkRepository
+    public class WorkflowBulkRepository : IWorkflowBulkRepository
     {
         private readonly IMongoDatabase _database;
 
         private IMongoCollection<WorkflowInstance> _collection => _database.GetCollection<WorkflowInstance>("Workflows");
 
-        static BulkRepository() { }
+        static WorkflowBulkRepository() { }
 
-        public BulkRepository(IMongoDatabase database)
+        public WorkflowBulkRepository(IMongoDatabase database)
         {
             _database = database;
         }

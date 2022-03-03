@@ -1,5 +1,4 @@
-﻿using System;
-using Conductor.Domain.Interfaces;
+﻿using Conductor.Domain.Interfaces;
 using Conductor.Domain.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,7 +12,8 @@ namespace Conductor.Domain
             services.AddSingleton<IWorkflowLoader, WorkflowLoader>();
             services.AddSingleton<ICustomStepService, CustomStepService>();
             services.AddSingleton<IExpressionEvaluator, ExpressionEvaluator>();
-            services.AddSingleton<IBulkService, BulkService>();
+            services.AddSingleton<IEventBulkService, EventBulkService>();
+            services.AddSingleton<IWorkflowBulkService, WorkflowBulkService>();
             services.AddTransient<CustomStep>();
         }
     }

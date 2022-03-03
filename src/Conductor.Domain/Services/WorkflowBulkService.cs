@@ -12,13 +12,13 @@ using WorkflowCore.Models;
 
 namespace Conductor.Domain.Services
 {
-    public class BulkService : IBulkService
+    public class WorkflowBulkService : IWorkflowBulkService
     {
         private readonly IWorkflowController _workflowController;
-        private readonly IBulkRepository _repository;
+        private readonly IWorkflowBulkRepository _repository;
         private readonly ILogger _logger;
 
-        public BulkService(IWorkflowController workflowController, IBulkRepository repository, ILoggerFactory loggerFactory)
+        public WorkflowBulkService(IWorkflowController workflowController, IWorkflowBulkRepository repository, ILoggerFactory loggerFactory)
         {
             _workflowController = workflowController;
             _repository = repository;

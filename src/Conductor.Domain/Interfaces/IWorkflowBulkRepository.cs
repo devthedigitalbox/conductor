@@ -4,7 +4,7 @@ using WorkflowCore.Models;
 
 namespace Conductor.Domain.Interfaces
 {
-    public interface IBulkRepository
+    public interface IWorkflowBulkRepository
     {
         Task<IEnumerable<string>> GetAllInstanceIds(string workflowId, params WorkflowStatus[] status);
     }
