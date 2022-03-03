@@ -218,7 +218,7 @@ namespace Conductor.Domain.Services
             {
                 Action<IStepBody, object> acn = (pStep, pData) =>
                 {
-                    object resolvedValue = _scriptHost.EvaluateExpression("time.time()", new Dictionary<string, object>()
+                    object resolvedValue = _scriptHost.EvaluateExpression($"data.ExecutionTimestamps_{source.NextStepId} if hasattr(data, 'ExecutionTimestamps_{source.NextStepId}') else time.time()", new Dictionary<string, object>()
                     {
                         ["step"] = pStep,
                         ["data"] = pData
@@ -233,7 +233,7 @@ namespace Conductor.Domain.Services
             {
                 Action<IStepBody, object> acn = (pStep, pData) =>
                 {
-                    object resolvedValue = _scriptHost.EvaluateExpression("time.time()", new Dictionary<string, object>()
+                    object resolvedValue = _scriptHost.EvaluateExpression($"data.ExecutionTimestamps_{nextStep.Key} if hasattr(data, 'ExecutionTimestamps_{nextStep.Key}') else time.time()", new Dictionary<string, object>()
                     {
                         ["step"] = pStep,
                         ["data"] = pData
