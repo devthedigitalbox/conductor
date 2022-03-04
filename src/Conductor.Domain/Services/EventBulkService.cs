@@ -18,8 +18,8 @@ namespace Conductor.Domain.Services
 
         public async Task<bool> PublishEvents(IEnumerable<Models.Event> events)
         {
-            var tasks = events.Select(d => Task.Run(async () => await _workflowController.PublishEvent(d.Name, d.Key, d.Data)));
-            await Task.WhenAll(tasks);
+            foreach (var e in events)
+                await _workflowController.PublishEvent(e.Name, e.Key, e.Data);
             return true;
         }
     }
