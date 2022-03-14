@@ -1,12 +1,10 @@
-
-
-* [Definitions](#definition-api)
-* [Workflows](#workflow-api)
-* [Events](#event-api)
-* [Activity Workers](#activity-api)
-* [Custom Steps](#steps-api)
-* [Diagnostics](#diagnostic-api)
-* [Swagger documentation](#swagger-documentation)
+- [Definitions](#definition-api)
+- [Workflows](#workflow-api)
+- [Events](#event-api)
+- [Activity Workers](#activity-api)
+- [Custom Steps](#steps-api)
+- [Diagnostics](#diagnostic-api)
+- [Swagger documentation](#swagger-documentation)
 
 Download the [Postman Collection](https://raw.githubusercontent.com/danielgerlag/conductor/master/docs/Conductor.postman_collection.json)
 
@@ -20,24 +18,24 @@ We `POST` the definition to `api/definition` in either `YAML` or `JSON`.
 POST /api/definition
 Content-Type: application/yaml
 ```
+
 ```yml
 Id: Hello1
 Steps:
-- Id: Step1
-  StepType: EmitLog
-  NextStepId: Step2
-  Inputs:
-    Message: '"Hello world"'
-    Level: '"Information"'
-- Id: Step2
-  StepType: EmitLog
-  Inputs:
-    Message: '"Goodbye!!!"'
-    Level: '"Information"'
+  - Id: Step1
+    StepType: EmitLog
+    NextStepId: Step2
+    Inputs:
+      Message: '"Hello world"'
+      Level: '"Information"'
+  - Id: Step2
+    StepType: EmitLog
+    Inputs:
+      Message: '"Goodbye!!!"'
+      Level: '"Information"'
 ```
 
 Posting to a definition ID that already exists, will create a second version of that workflow definition and all existing workflows that were started on the old verison, will continue on the old version but all workflows that are started after this will run on the new version.
-
 
 # Workflow API
 
@@ -49,11 +47,14 @@ To start a workflow, submit a `POST` to `/api/workflow/<<DefinitionId>>`, where 
 POST /api/workflow/<<DefinitionId>>
 
 ```
+
 Example: Start the `HelloWorld` workflow, with some custom data.
+
 ```
 POST /api/workflow/HelloWorld
 Content-Type: application/x-yaml
 ```
+
 ```yaml
 CustomMessage: foobar
 ```
@@ -62,16 +63,16 @@ CustomMessage: foobar
 
 ```json
 {
-    "workflowId": "5d26ae05ec9ce50001bc9c2a",
-    "data": {
-        "CustomMessage": "foobar"
-    },
-    "definitionId": "HelloWorld",
-    "version": 1,
-    "status": "Runnable",
-    "reference": null,
-    "startTime": "2019-07-11T03:33:25.203Z",
-    "endTime": null
+  "workflowId": "5d26ae05ec9ce50001bc9c2a",
+  "data": {
+    "CustomMessage": "foobar"
+  },
+  "definitionId": "HelloWorld",
+  "version": 1,
+  "status": "Runnable",
+  "reference": null,
+  "startTime": "2019-07-11T03:33:25.203Z",
+  "endTime": null
 }
 ```
 
@@ -87,16 +88,16 @@ GET /api/workflow/<<WorkflowId>>
 
 ```json
 {
-    "workflowId": "5d26ae05ec9ce50001bc9c2a",
-    "data": {
-        "CustomMessage": "foobar"
-    },
-    "definitionId": "HelloWorld",
-    "version": 1,
-    "status": "Runnable",
-    "reference": null,
-    "startTime": "2019-07-11T03:33:25.203Z",
-    "endTime": null
+  "workflowId": "5d26ae05ec9ce50001bc9c2a",
+  "data": {
+    "CustomMessage": "foobar"
+  },
+  "definitionId": "HelloWorld",
+  "version": 1,
+  "status": "Runnable",
+  "reference": null,
+  "startTime": "2019-07-11T03:33:25.203Z",
+  "endTime": null
 }
 ```
 
@@ -107,7 +108,6 @@ You can suspend a workflow with a `PUT`
 ```
 PUT /api/workflow/<<WorkflowId>>/suspend
 ```
-
 
 ## Resuming a workflow
 
@@ -125,14 +125,14 @@ You can abort a workflow with a `DELETE`
 DELETE /api/workflow/<<WorkflowId>>
 ```
 
-
 # Event API
 
-You can publish an event with a particular name and key and attach some data to all workflows that may be listening to it.  Use the event API.
+You can publish an event with a particular name and key and attach some data to all workflows that may be listening to it. Use the event API.
 
 ```
 POST /api/event/<<name>>/<<key>>
 ```
+
 ```
 <<data>>
 ```
@@ -141,16 +141,17 @@ POST /api/event/<<name>>/<<key>>
 
 An activity is defined as an item on an external queue of work, that a workflow can wait for.
 
-## Getting a pending activity 
+## Getting a pending activity
 
-To fetch a waiting activity of an active workflow.  
+To fetch a waiting activity of an active workflow.
+
 ```
 GET /api/activity/<<name>>?workerId=<<workerId>>&timeout=30
 ```
 
-* `name` (required) is the activity name to fetch waiting work for.
-* `workerId` (optional) is an identifier of the worker pulling the work.
-* `timout` (optional) number of seconds to block while waiting for an activity.
+- `name` (required) is the activity name to fetch waiting work for.
+- `workerId` (optional) is an identifier of the worker pulling the work.
+- `timout` (optional) number of seconds to block while waiting for an activity.
 
 #### Response
 
@@ -159,24 +160,25 @@ If there is work waiting for that activity name, then an exclusive token will be
 
 ```json
 {
-    "token": "...",
-    "activityName": "...",
-    "parameters": {},
-    "tokenExpiry": "9999-12-31T23:59:59.9999999"
+  "token": "...",
+  "activityName": "...",
+  "parameters": {},
+  "tokenExpiry": "9999-12-31T23:59:59.9999999"
 }
 ```
-* `token` An exclusive token is issued to the worker to use in future requests for this activity.
-* `parameters` The input data that the workflow attached to this actvity.
-* `tokenExpiry` When the token expires and the activity will be made available to other workers.
 
+- `token` An exclusive token is issued to the worker to use in future requests for this activity.
+- `parameters` The input data that the workflow attached to this actvity.
+- `tokenExpiry` When the token expires and the activity will be made available to other workers.
 
-## Submitting a result for an activity 
+## Submitting a result for an activity
 
 To submit a successful response to an activity and pass some response data back to the workflow in the body of the request.
 
 ```
 POST /api/activity/success/<<token>>
 ```
+
 ```
 <<data>>
 ```
@@ -186,6 +188,7 @@ To submit a failure response to an activity and pass some response data back to 
 ```
 POST /api/activity/fail/<<token>>
 ```
+
 ```
 <<data>>
 ```
@@ -198,19 +201,19 @@ To release a token held by a worker, so that another worker could pick it up.
 DELETE /api/activity/<<token>>
 ```
 
-
-
 # Steps API
 
-Conductor also allows you to define your own steps that can be used within your workflows.  Currently, the only supported language is Python.  More languages will be implemented in the future.
+Conductor also allows you to define your own steps that can be used within your workflows. Currently, the only supported language is Python. More languages will be implemented in the future.
 
 ## Creating a step
 
 The following call creates a step called `add`, which is a Python script that sets c to a + b
+
 ```
 POST /api/step/add
 Content-Type: text/x-python
 ```
+
 ```python
 c = a + b
 ```
@@ -221,13 +224,11 @@ c = a + b
 GET /api/step/<<id>>
 ```
 
-
 # Diagnostic API
 
 ```
 GET /api/info
 ```
-
 
 # Swagger Documentation
 
