@@ -19,7 +19,7 @@ namespace Conductor.Domain.Services
         public async Task<bool> PublishEvents(IEnumerable<Models.Event> events)
         {
             foreach (var e in events)
-                await _workflowController.PublishEvent(e.Name, e.Key, e.Data);
+                await _workflowController.PublishEvent(e.Name, e.Key, e.Data, e.EffectiveDate);
             return true;
         }
     }

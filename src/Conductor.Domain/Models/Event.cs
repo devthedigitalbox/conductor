@@ -8,5 +8,6 @@ namespace Conductor.Domain.Models
         public string Name { get; set; }
         public string Key { get; set; }
         public ExpandoObject Data { get; set; }
+        public DateTime? EffectiveDate { get; set; }
     }
 }

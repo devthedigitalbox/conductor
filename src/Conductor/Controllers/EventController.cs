@@ -27,9 +27,9 @@ namespace Conductor.Controllers
 
         [Authorize(Policy = Policies.Controller)]
         [HttpPost("{name}/{key}")]
-        public async Task Post(string name, string key, [FromBody] object data)
+        public async Task Post(string name, string key, [FromBody] object data, [FromQuery] DateTime? effectiveDate)
         {
-            await _workflowController.PublishEvent(name, key, data);
+            await _workflowController.PublishEvent(name, key, data, effectiveDate);
             Response.StatusCode = 204;
         }
     }
