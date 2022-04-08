@@ -14,7 +14,8 @@
       "launchBrowser": true,
       "launchUrl": "api/values",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "rabbitmq": "localhost"
       }
     },
     "Conductor": {
@@ -22,7 +23,8 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "rabbitmq": "localhost"
       },
       "applicationUrl": "http://localhost:5001"
     },

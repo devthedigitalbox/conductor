@@ -26,7 +26,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;
 using Conductor.Auth;
+using Conductor.Consumers;
 using Conductor.Middleware;
+using MassTransit;
 using Microsoft.OpenApi.Models;
 
 namespace Conductor
@@ -51,6 +53,10 @@ namespace Conductor
             if (string.IsNullOrEmpty(redisConnectionStr))
                 redisConnectionStr = Configuration.GetValue<string>("RedisConnectionString");
 
+            var rabbitmqConnectionStr = EnvironmentVariables.RabbitMQ;
+            if (string.IsNullOrEmpty(rabbitmqConnectionStr))
+                rabbitmqConnectionStr = Configuration.GetValue<string>("RabbitMQConnectionString");
+            
             var authEnabled = false;
             var authEnabledStr = EnvironmentVariables.Auth;
             if (string.IsNullOrEmpty(authEnabledStr))
@@ -58,7 +64,6 @@ namespace Conductor
             else
                 authEnabled = Convert.ToBoolean(authEnabledStr);
             
-
             services.AddMvc(options =>
             {
                 options.InputFormatters.Add(new YamlRequestBodyInputFormatter());                
@@ -118,6 +123,23 @@ namespace Conductor
 
             services.AddSingleton<IMapper>(x => new Mapper(config));
 
+
+            if (!string.IsNullOrEmpty(rabbitmqConnectionStr))
+            {
+                services.AddMassTransit(x =>
+                {
+                    x.AddConsumer<PublishEventsCommandConsumer>();
+
+                    x.UsingRabbitMq((context, cfg) =>
+                    {
+                        cfg.Host(rabbitmqConnectionStr);
+                        cfg.UseNewtonsoftJsonSerializer();
+
+                        cfg.ReceiveEndpoint("publish-events",
+                            e => { e.ConfigureConsumer<PublishEventsCommandConsumer>(context); });
+                    });
+                });
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

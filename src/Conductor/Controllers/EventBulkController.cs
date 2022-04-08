@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Conductor.Auth;
 using Conductor.Domain.Interfaces;
-using Conductor.Domain.Models;
 using Conductor.Models;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
-using WorkflowCore.Interface;
 
 namespace Conductor.Controllers
 {
@@ -20,21 +13,30 @@ namespace Conductor.Controllers
     public class EventBulkController : ControllerBase
     {
         private readonly IEventBulkService _eventBulkService;
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public EventBulkController(IEventBulkService eventBulkService)
+        public EventBulkController(IEventBulkService eventBulkService, IPublishEndpoint publishEndpoint = null)
         {
             _eventBulkService = eventBulkService;
+            _publishEndpoint = publishEndpoint;
         }
 
         [HttpPost]
         [Authorize(Policy = Policies.Controller)]
         public async Task<IActionResult> Post([FromBody] EventBulkPostPayload payload)
         {
-            var result = await _eventBulkService.PublishEvents(payload.Events);
-            if (result)
-                return NoContent();
+            if (string.IsNullOrEmpty(EnvironmentVariables.RabbitMQ))
+            {
+                var result = await _eventBulkService.PublishEvents(payload.Events);
+                if (!result)
+                    return BadRequest();
+            }
             else
-                return BadRequest();
+            {
+                await _publishEndpoint.Publish(payload);
+            }
+
+            return NoContent();
         }
     }
 }

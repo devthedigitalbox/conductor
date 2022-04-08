@@ -12,5 +12,6 @@ namespace Conductor
         public static string Auth => Environment.GetEnvironmentVariable("auth");
         public static string PublicKey => Environment.GetEnvironmentVariable("publickey");
         public static string Alg => Environment.GetEnvironmentVariable("alg");
+        public static string RabbitMQ => Environment.GetEnvironmentVariable("rabbitmq");
     }
 }
