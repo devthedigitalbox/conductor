@@ -10,7 +10,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\workflow-core\src\WorkflowCore\WorkflowCore.csproj" />
     <ProjectReference Include="..\Conductor.Domain\Conductor.Domain.csproj" />
   </ItemGroup>
 

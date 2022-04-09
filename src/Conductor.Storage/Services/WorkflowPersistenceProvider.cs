@@ -1,21 +1,22 @@
-﻿using MongoDB.Bson.Serialization;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
+using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
+using WorkflowCore.Exceptions;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
-using System.Threading;
-using WorkflowCore.Exceptions;
 
 namespace Conductor.Storage.Services
 {
     public class WorkflowPersistenceProvider : IPersistenceProvider
     {
         private readonly IMongoDatabase _database;
-        public bool SupportsScheduledCommands => false;
 
         public WorkflowPersistenceProvider(IMongoDatabase database)
         {
@@ -113,18 +114,18 @@ namespace Conductor.Storage.Services
 
         private IMongoCollection<ExecutionError> ExecutionErrors => _database.GetCollection<ExecutionError>("ExecutionErrors");
 
-        public async Task<string> CreateNewWorkflow(WorkflowInstance workflow, CancellationToken cancellationToken = default)
+        public async Task<string> CreateNewWorkflow(WorkflowInstance workflow)
         {
-            await WorkflowInstances.InsertOneAsync(workflow, cancellationToken: cancellationToken);
+            await WorkflowInstances.InsertOneAsync(workflow);
             return workflow.Id;
         }
 
-        public async Task PersistWorkflow(WorkflowInstance workflow, CancellationToken cancellationToken = default)
+        public async Task PersistWorkflow(WorkflowInstance workflow)
         {
-            await WorkflowInstances.ReplaceOneAsync(x => x.Id == workflow.Id, workflow, cancellationToken: cancellationToken);
+            await WorkflowInstances.ReplaceOneAsync(x => x.Id == workflow.Id, workflow);
         }
 
-        public async Task<IEnumerable<string>> GetRunnableInstances(DateTime asAt, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<string>> GetRunnableInstances(DateTime asAt)
         {
             var now = asAt.ToUniversalTime().Ticks;
             var query = WorkflowInstances
@@ -137,27 +138,27 @@ namespace Conductor.Storage.Services
                 )
                 .Project(x => x.Id);
 
-            return await query.ToListAsync(cancellationToken);
+            return await query.ToListAsync();            
         }
 
-        public async Task<WorkflowInstance> GetWorkflowInstance(string Id, CancellationToken cancellationToken = default)
+        public async Task<WorkflowInstance> GetWorkflowInstance(string Id)
         {
-            var query = await WorkflowInstances.FindAsync(x => x.Id == Id, cancellationToken: cancellationToken);
-            var result = await query.FirstAsync(cancellationToken);
+            var query = await WorkflowInstances.FindAsync(x => x.Id == Id);
+            var result = await query.FirstOrDefaultAsync();
             if (result == null)
                 throw new NotFoundException();
             return result;
         }
 
-        public async Task<IEnumerable<WorkflowInstance>> GetWorkflowInstances(IEnumerable<string> ids, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<WorkflowInstance>> GetWorkflowInstances(IEnumerable<string> ids)
         {
             if (ids == null)
             {
                 return new List<WorkflowInstance>();
             }
 
-            var result = await WorkflowInstances.FindAsync(x => ids.Contains(x.Id), cancellationToken: cancellationToken);
-            return await result.ToListAsync(cancellationToken);
+            var result = await WorkflowInstances.FindAsync(x => ids.Contains(x.Id));
+            return await result.ToListAsync();
         }
 
         public async Task<IEnumerable<WorkflowInstance>> GetWorkflowInstances(WorkflowStatus? status, string type, DateTime? createdFrom, DateTime? createdTo, int skip, int take)
@@ -179,15 +180,15 @@ namespace Conductor.Storage.Services
             return result.Skip(skip).Take(take).ToList();
         }
 
-        public async Task<string> CreateEventSubscription(EventSubscription subscription, CancellationToken cancellationToken = default)
+        public async Task<string> CreateEventSubscription(EventSubscription subscription)
         {
-            await EventSubscriptions.InsertOneAsync(subscription, cancellationToken: cancellationToken);
+            await EventSubscriptions.InsertOneAsync(subscription);
             return subscription.Id;
         }
 
-        public async Task TerminateSubscription(string eventSubscriptionId, CancellationToken cancellationToken = default)
+        public async Task TerminateSubscription(string eventSubscriptionId)
         {
-            await EventSubscriptions.DeleteOneAsync(x => x.Id == eventSubscriptionId, cancellationToken);
+            await EventSubscriptions.DeleteOneAsync(x => x.Id == eventSubscriptionId);
         }
 
         public void EnsureStoreExists()
@@ -195,110 +196,100 @@ namespace Conductor.Storage.Services
 
         }
 
-        public async Task<IEnumerable<EventSubscription>> GetSubscriptions(string eventName, string eventKey, DateTime asOf, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<EventSubscription>> GetSubscriptions(string eventName, string eventKey, DateTime asOf)
         {
             var query = EventSubscriptions
                 .Find(x => x.EventName == eventName && x.EventKey == eventKey && x.SubscribeAsOf <= asOf);
 
-            return await query.ToListAsync(cancellationToken);
+            return await query.ToListAsync();
         }
 
-        public async Task<string> CreateEvent(Event newEvent, CancellationToken cancellationToken = default)
+        public async Task<string> CreateEvent(Event newEvent)
         {
-            await Events.InsertOneAsync(newEvent, cancellationToken: cancellationToken);
+            await Events.InsertOneAsync(newEvent);
             return newEvent.Id;
         }
 
-        public async Task<Event> GetEvent(string id, CancellationToken cancellationToken = default)
+        public async Task<Event> GetEvent(string id)
         {
-            var result = await Events.FindAsync(x => x.Id == id, cancellationToken: cancellationToken);
-            return await result.FirstAsync(cancellationToken);
+            var result = await Events.FindAsync(x => x.Id == id);
+            return await result.FirstAsync();
         }
 
-        public async Task<IEnumerable<string>> GetRunnableEvents(DateTime asAt, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<string>> GetRunnableEvents(DateTime asAt)
         {
             var now = asAt.ToUniversalTime();
             var query = Events
                 .Find(x => !x.IsProcessed && x.EventTime <= now)
                 .Project(x => x.Id);
 
-            return await query.ToListAsync(cancellationToken);
+            return await query.ToListAsync();
         }
 
-        public async Task MarkEventProcessed(string id, CancellationToken cancellationToken = default)
+        public async Task MarkEventProcessed(string id)
         {
             var update = Builders<Event>.Update
                 .Set(x => x.IsProcessed, true);
 
-            await Events.UpdateOneAsync(x => x.Id == id, update, cancellationToken: cancellationToken);
+            await Events.UpdateOneAsync(x => x.Id == id, update);
         }
 
-        public async Task<IEnumerable<string>> GetEvents(string eventName, string eventKey, DateTime asOf, CancellationToken cancellationToken)
+        public async Task<IEnumerable<string>> GetEvents(string eventName, string eventKey, DateTime asOf)
         {
             var query = Events
                 .Find(x => x.EventName == eventName && x.EventKey == eventKey && x.EventTime >= asOf)
                 .Project(x => x.Id);
 
-            return await query.ToListAsync(cancellationToken);
+            return await query.ToListAsync();
         }
 
-        public async Task MarkEventUnprocessed(string id, CancellationToken cancellationToken = default)
+        public async Task MarkEventUnprocessed(string id)
         {
             var update = Builders<Event>.Update
                 .Set(x => x.IsProcessed, false);
 
-            await Events.UpdateOneAsync(x => x.Id == id, update, cancellationToken: cancellationToken);
+            await Events.UpdateOneAsync(x => x.Id == id, update);
         }
 
-        public async Task PersistErrors(IEnumerable<ExecutionError> errors, CancellationToken cancellationToken = default)
+        public async Task PersistErrors(IEnumerable<ExecutionError> errors)
         {
             if (errors.Any())
-                await ExecutionErrors.InsertManyAsync(errors, cancellationToken: cancellationToken);
+                await ExecutionErrors.InsertManyAsync(errors);
         }
 
-        public async Task<EventSubscription> GetSubscription(string eventSubscriptionId, CancellationToken cancellationToken = default)
+        public async Task<EventSubscription> GetSubscription(string eventSubscriptionId)
         {
-            var result = await EventSubscriptions.FindAsync(x => x.Id == eventSubscriptionId, cancellationToken: cancellationToken);
-            return await result.FirstOrDefaultAsync(cancellationToken);
+            var result = await EventSubscriptions.FindAsync(x => x.Id == eventSubscriptionId);
+            return await result.FirstOrDefaultAsync();
         }
 
-        public async Task<EventSubscription> GetFirstOpenSubscription(string eventName, string eventKey, DateTime asOf, CancellationToken cancellationToken = default)
+        public async Task<EventSubscription> GetFirstOpenSubscription(string eventName, string eventKey, DateTime asOf)
         {
             var query = EventSubscriptions
                 .Find(x => x.EventName == eventName && x.EventKey == eventKey && x.SubscribeAsOf <= asOf && x.ExternalToken == null);
 
-            return await query.FirstOrDefaultAsync(cancellationToken);
+            return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<bool> SetSubscriptionToken(string eventSubscriptionId, string token, string workerId, DateTime expiry, CancellationToken cancellationToken = default)
+        public async Task<bool> SetSubscriptionToken(string eventSubscriptionId, string token, string workerId, DateTime expiry)
         {
             var update = Builders<EventSubscription>.Update
                 .Set(x => x.ExternalToken, token)
                 .Set(x => x.ExternalTokenExpiry, expiry)
                 .Set(x => x.ExternalWorkerId, workerId);
 
-            var result = await EventSubscriptions.UpdateOneAsync(x => x.Id == eventSubscriptionId && x.ExternalToken == null, update, cancellationToken: cancellationToken);
+            var result = await EventSubscriptions.UpdateOneAsync(x => x.Id == eventSubscriptionId && x.ExternalToken == null, update);
             return (result.ModifiedCount > 0);
         }
 
-        public async Task ClearSubscriptionToken(string eventSubscriptionId, string token, CancellationToken cancellationToken = default)
+        public async Task ClearSubscriptionToken(string eventSubscriptionId, string token)
         {
             var update = Builders<EventSubscription>.Update
                 .Set(x => x.ExternalToken, null)
                 .Set(x => x.ExternalTokenExpiry, null)
                 .Set(x => x.ExternalWorkerId, null);
 
-            await EventSubscriptions.UpdateOneAsync(x => x.Id == eventSubscriptionId && x.ExternalToken == token, update, cancellationToken: cancellationToken);
-        }
-
-        public async Task ScheduleCommand(ScheduledCommand command)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task ProcessCommands(DateTimeOffset asOf, Func<ScheduledCommand, Task> action, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
+            await EventSubscriptions.UpdateOneAsync(x => x.Id == eventSubscriptionId && x.ExternalToken == token, update);
         }
     }
 }
