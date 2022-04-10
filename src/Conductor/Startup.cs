@@ -134,6 +134,13 @@ namespace Conductor
                     {
                         cfg.Host(rabbitmqConnectionStr);
                         cfg.UseNewtonsoftJsonSerializer();
+                        
+                        cfg.UseNewtonsoftRawJsonDeserializer();
+                        cfg.ConfigureNewtonsoftJsonDeserializer(options =>
+                        {
+                            options.DateParseHandling = DateParseHandling.DateTime;
+                            return options;
+                        });
 
                         cfg.ReceiveEndpoint("publish-events",
                             e => { e.ConfigureConsumer<PublishEventsCommandConsumer>(context); });
