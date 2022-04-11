@@ -24,8 +24,7 @@
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "rabbitmq": "localhost",
-        "redis": "localhost"
+        "rabbitmq": "amqp://localhost"
       },
       "applicationUrl": "http://localhost:5001"
     },

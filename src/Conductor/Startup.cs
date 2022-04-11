@@ -109,7 +109,7 @@ namespace Conductor
 
                 if (!string.IsNullOrEmpty(rabbitmqConnectionStr))
                 {
-                    cfg.UseRabbitMQ(new ConnectionFactory() { HostName = rabbitmqConnectionStr});
+                    cfg.UseRabbitMQ(new ConnectionFactory() { Uri = new Uri(rabbitmqConnectionStr)});
                 }
             });
             services.ConfigureDomainServices();
