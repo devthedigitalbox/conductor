@@ -30,6 +30,7 @@ using Conductor.Consumers;
 using Conductor.Middleware;
 using MassTransit;
 using Microsoft.OpenApi.Models;
+using RabbitMQ.Client;
 
 namespace Conductor
 {
@@ -104,6 +105,11 @@ namespace Conductor
                 {
                     cfg.UseRedisLocking(redisConnectionStr);
                     cfg.UseRedisQueues(redisConnectionStr, "conductor");
+                }
+
+                if (!string.IsNullOrEmpty(rabbitmqConnectionStr))
+                {
+                    cfg.UseRabbitMQ(new ConnectionFactory() { HostName = rabbitmqConnectionStr});
                 }
             });
             services.ConfigureDomainServices();
