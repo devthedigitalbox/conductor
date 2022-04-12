@@ -5,17 +5,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MongoDB.Driver.Linq;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 using System.Threading;
-using WorkflowCore.Exceptions;
 
 namespace Conductor.Storage.Services
 {
     public class WorkflowPersistenceProvider : IPersistenceProvider
     {
         private readonly IMongoDatabase _database;
-        public bool SupportsScheduledCommands => false;
+        public bool SupportsScheduledCommands => true;
 
         public WorkflowPersistenceProvider(IMongoDatabase database)
         {
@@ -73,6 +73,9 @@ namespace Conductor.Storage.Services
             BsonClassMap.RegisterClassMap<SchedulePersistenceData>(x => x.AutoMap());
             BsonClassMap.RegisterClassMap<ExecutionPointer>(x => x.AutoMap());
             BsonClassMap.RegisterClassMap<ActivityResult>(x => x.AutoMap());
+            BsonClassMap.RegisterClassMap<IteratorPersistenceData>(x => x.AutoMap());
+            BsonClassMap.RegisterClassMap<ScheduledCommand>(x => x.AutoMap())
+                .SetIgnoreExtraElements(true);
         }
 
         static bool indexesCreated = false;
@@ -101,6 +104,17 @@ namespace Conductor.Storage.Services
                         .Ascending(x => x.EventKey),
                     new CreateIndexOptions { Background = true, Name = "idx_namekey" }));
 
+                instance.ScheduledCommands.Indexes.CreateOne(new CreateIndexModel<ScheduledCommand>(
+                    Builders<ScheduledCommand>.IndexKeys
+                        .Descending(x => x.ExecuteTime),
+                    new CreateIndexOptions { Background = true, Name = "idx_exectime" }));
+
+                instance.ScheduledCommands.Indexes.CreateOne(new CreateIndexModel<ScheduledCommand>(
+                    Builders<ScheduledCommand>.IndexKeys
+                        .Ascending(x => x.CommandName)
+                        .Ascending(x => x.Data),
+                    new CreateIndexOptions { Background = true, Unique = true, Name = "idx_key" }));
+
                 indexesCreated = true;
             }
         }
@@ -112,6 +126,8 @@ namespace Conductor.Storage.Services
         private IMongoCollection<Event> Events => _database.GetCollection<Event>("Events");
 
         private IMongoCollection<ExecutionError> ExecutionErrors => _database.GetCollection<ExecutionError>("ExecutionErrors");
+
+        private IMongoCollection<ScheduledCommand> ScheduledCommands => _database.GetCollection<ScheduledCommand>("ScheduledCommands");
 
         public async Task<string> CreateNewWorkflow(WorkflowInstance workflow, CancellationToken cancellationToken = default)
         {
@@ -142,11 +158,8 @@ namespace Conductor.Storage.Services
 
         public async Task<WorkflowInstance> GetWorkflowInstance(string Id, CancellationToken cancellationToken = default)
         {
-            var query = await WorkflowInstances.FindAsync(x => x.Id == Id, cancellationToken: cancellationToken);
-            var result = await query.FirstAsync(cancellationToken);
-            if (result == null)
-                throw new NotFoundException();
-            return result;
+            var result = await WorkflowInstances.FindAsync(x => x.Id == Id, cancellationToken: cancellationToken);
+            return await result.FirstAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<WorkflowInstance>> GetWorkflowInstances(IEnumerable<string> ids, CancellationToken cancellationToken = default)
@@ -162,7 +175,7 @@ namespace Conductor.Storage.Services
 
         public async Task<IEnumerable<WorkflowInstance>> GetWorkflowInstances(WorkflowStatus? status, string type, DateTime? createdFrom, DateTime? createdTo, int skip, int take)
         {
-            IQueryable<WorkflowInstance> result = WorkflowInstances.AsQueryable();
+            IMongoQueryable<WorkflowInstance> result = WorkflowInstances.AsQueryable();
 
             if (status.HasValue)
                 result = result.Where(x => x.Status == status.Value);
@@ -176,7 +189,7 @@ namespace Conductor.Storage.Services
             if (createdTo.HasValue)
                 result = result.Where(x => x.CreateTime <= createdTo.Value);
 
-            return result.Skip(skip).Take(take).ToList();
+            return await result.Skip(skip).Take(take).ToListAsync();
         }
 
         public async Task<string> CreateEventSubscription(EventSubscription subscription, CancellationToken cancellationToken = default)
@@ -293,12 +306,42 @@ namespace Conductor.Storage.Services
 
         public async Task ScheduleCommand(ScheduledCommand command)
         {
-            throw new NotImplementedException();
+            try
+            {
+                await ScheduledCommands.InsertOneAsync(command);
+            }
+            catch (MongoWriteException ex)
+            {
+                if (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
+                     return;
+                throw;
+            }
+            catch (MongoBulkWriteException ex)
+            {
+                if (ex.WriteErrors.All(x => x.Category == ServerErrorCategory.DuplicateKey))
+                    return;
+                throw;
+            }
         }
 
         public async Task ProcessCommands(DateTimeOffset asOf, Func<ScheduledCommand, Task> action, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var cursor = await ScheduledCommands.FindAsync(x => x.ExecuteTime < asOf.UtcDateTime.Ticks);
+            while (await cursor.MoveNextAsync(cancellationToken))
+            {
+                foreach (var command in cursor.Current)
+                {
+                    try
+                    {
+                        await action(command);
+                        await ScheduledCommands.DeleteOneAsync(x => x.CommandName == command.CommandName && x.Data == command.Data);
+                    }
+                    catch (Exception)
+                    {
+                        //TODO: add logger
+                    }
+                }
+            }
         }
     }
 }
