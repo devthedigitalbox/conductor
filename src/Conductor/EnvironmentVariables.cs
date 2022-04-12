@@ -13,5 +13,7 @@ namespace Conductor
         public static string PublicKey => Environment.GetEnvironmentVariable("publickey");
         public static string Alg => Environment.GetEnvironmentVariable("alg");
         public static string RabbitMQ => Environment.GetEnvironmentVariable("rabbitmq");
+        public static int? PollingInterval => string.IsNullOrEmpty(Environment.GetEnvironmentVariable("pollinginterval")) ? default : int.Parse(Environment.GetEnvironmentVariable("pollinginterval"));
+
     }
 }

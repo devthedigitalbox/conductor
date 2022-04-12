@@ -58,6 +58,8 @@ namespace Conductor
             if (string.IsNullOrEmpty(rabbitmqConnectionStr))
                 rabbitmqConnectionStr = Configuration.GetValue<string>("RabbitMQConnectionString");
             
+            var pollingInterval = EnvironmentVariables.PollingInterval;
+
             var authEnabled = false;
             var authEnabledStr = EnvironmentVariables.Auth;
             if (string.IsNullOrEmpty(authEnabledStr))
@@ -100,6 +102,11 @@ namespace Conductor
 
             services.AddWorkflow(cfg =>
             {
+                if (pollingInterval.HasValue)
+                {
+                    cfg.UsePollInterval(TimeSpan.FromSeconds(pollingInterval.Value));
+                }
+                
                 cfg.UseMongoDB(dbConnectionStr, Configuration.GetValue<string>("DbName"));
                 if (!string.IsNullOrEmpty(redisConnectionStr))
                 {
