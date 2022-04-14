@@ -233,6 +233,7 @@ namespace Conductor.Storage.Services
             var now = asAt.ToUniversalTime();
             var query = Events
                 .Find(x => !x.IsProcessed && x.EventTime <= now)
+                .SortBy(x => x.EventTime)
                 .Project(x => x.Id);
 
             return await query.ToListAsync(cancellationToken);
@@ -250,6 +251,7 @@ namespace Conductor.Storage.Services
         {
             var query = Events
                 .Find(x => x.EventName == eventName && x.EventKey == eventKey && x.EventTime >= asOf)
+                .SortBy(x => x.EventTime)
                 .Project(x => x.Id);
 
             return await query.ToListAsync(cancellationToken);

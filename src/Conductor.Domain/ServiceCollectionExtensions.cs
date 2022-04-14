@@ -1,6 +1,7 @@
 ﻿using Conductor.Domain.Interfaces;
 using Conductor.Domain.Services;
 using Microsoft.Extensions.DependencyInjection;
+using WorkflowCore.Interface;
 
 namespace Conductor.Domain
 {
@@ -14,6 +15,7 @@ namespace Conductor.Domain
             services.AddSingleton<IExpressionEvaluator, ExpressionEvaluator>();
             services.AddSingleton<IEventBulkService, EventBulkService>();
             services.AddSingleton<IWorkflowBulkService, WorkflowBulkService>();
+            services.AddSingleton<IWorkflowController, WorkflowController>();
             services.AddTransient<CustomStep>();
         }
     }
