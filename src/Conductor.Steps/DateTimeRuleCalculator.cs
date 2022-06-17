@@ -11,14 +11,14 @@ namespace Conductor.Steps
 {
     public class DateTimeRuleCalculator : StepBodyAsync
     {
-        public string DaysOfWeek { get; set; } = string.Join(",", new {
-            DayOfWeek.Sunday,
-            DayOfWeek.Monday,
-            DayOfWeek.Tuesday,
-            DayOfWeek.Wednesday,
-            DayOfWeek.Thursday,
-            DayOfWeek.Friday,
-            DayOfWeek.Saturday
+        public string DaysOfWeek { get; set; } = string.Join(",", new[]{
+            (int) DayOfWeek.Sunday,
+            (int) DayOfWeek.Monday,
+            (int) DayOfWeek.Tuesday,
+            (int) DayOfWeek.Wednesday,
+            (int) DayOfWeek.Thursday,
+            (int) DayOfWeek.Friday,
+            (int) DayOfWeek.Saturday
         });
         public TimeSpan TimeRangeStart { get; set; } = new TimeSpan(0, 0, 0);
         public TimeSpan TimeRangeEnd { get; set; } =  new TimeSpan(24, 0, 0);
