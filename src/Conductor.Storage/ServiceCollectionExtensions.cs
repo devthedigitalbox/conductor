@@ -16,6 +16,7 @@ namespace Conductor.Storage
             services.AddTransient<IDefinitionRepository, DefinitionRepository>(x => new DefinitionRepository(db));
             services.AddTransient<IResourceRepository, ResourceRepository>(x => new ResourceRepository(db));
             services.AddTransient<IWorkflowBulkRepository, WorkflowBulkRepository>(x => new WorkflowBulkRepository(db));
+            services.AddTransient<ISubscriptionsRepository, SubscriptionsRepository>(x => new SubscriptionsRepository(db));
         }
 
         public static WorkflowOptions UseMongoDB(this WorkflowOptions options, string mongoUrl, string databaseName)

@@ -30,6 +30,7 @@ using Conductor.Consumers;
 using Conductor.Middleware;
 using MassTransit;
 using Microsoft.OpenApi.Models;
+using Quartz;
 using RabbitMQ.Client;
 
 namespace Conductor
@@ -111,7 +112,7 @@ namespace Conductor
                 if (!string.IsNullOrEmpty(redisConnectionStr))
                 {
                     cfg.UseRedisLocking(redisConnectionStr);
-                    cfg.UseRedisQueues(redisConnectionStr, "conductor");
+                    // cfg.UseRedisQueues(redisConnectionStr, "conductor");
                 }
 
                 if (!string.IsNullOrEmpty(rabbitmqConnectionStr))
@@ -160,6 +161,22 @@ namespace Conductor
                     });
                 });
             }
+            
+            services.AddQuartz(q =>
+            {
+                q.UseMicrosoftDependencyInjectionJobFactory();
+                q.ScheduleJob<TerminateDanglingSubscriptionsJob>(trigger => trigger
+                    .WithIdentity("TerminateDanglingSubscriptionsJob")
+                    .StartAt(DateBuilder.TodayAt(0, 0, 0))
+                    .WithDailyTimeIntervalSchedule(x => x.WithInterval(1, IntervalUnit.Month))
+                );
+            });
+            
+            services.AddQuartzHostedService(options =>
+            {
+                // when shutting down we want jobs to complete gracefully
+                options.WaitForJobsToComplete = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
