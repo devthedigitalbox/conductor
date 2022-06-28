@@ -167,8 +167,8 @@ namespace Conductor
                 q.UseMicrosoftDependencyInjectionJobFactory();
                 q.ScheduleJob<TerminateDanglingSubscriptionsJob>(trigger => trigger
                     .WithIdentity("TerminateDanglingSubscriptionsJob")
-                    .StartAt(DateBuilder.TodayAt(0, 0, 0))
-                    .WithDailyTimeIntervalSchedule(x => x.WithInterval(1, IntervalUnit.Month))
+                    .StartAt(DateBuilder.TodayAt(3, 0, 0))
+                    .WithSimpleSchedule(x => x.WithIntervalInHours(24).RepeatForever())
                 );
             });
             
