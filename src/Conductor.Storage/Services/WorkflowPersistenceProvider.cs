@@ -83,27 +83,65 @@ namespace Conductor.Storage.Services
         {
             if (!indexesCreated)
             {
+                // Workflows indexes
                 instance.WorkflowInstances.Indexes.CreateOne(new CreateIndexModel<WorkflowInstance>(
                     Builders<WorkflowInstance>.IndexKeys.Ascending(x => x.NextExecution),
                     new CreateIndexOptions { Background = true, Name = "idx_nextExec" }));
 
+                instance.WorkflowInstances.Indexes.CreateOne(new CreateIndexModel<WorkflowInstance>(
+                    Builders<WorkflowInstance>.IndexKeys.Ascending(x => x.WorkflowDefinitionId),
+                    new CreateIndexOptions {Background = true, Name = "idx_workflowdefid"}));
+
+                instance.WorkflowInstances.Indexes.CreateOne(new CreateIndexModel<WorkflowInstance>(
+                    Builders<WorkflowInstance>.IndexKeys.Ascending(x => x.Status),
+                    new CreateIndexOptions { Background = true, Name = "idx_status" }));
+
+                instance.WorkflowInstances.Indexes.CreateOne(new CreateIndexModel<WorkflowInstance>(
+                    Builders<WorkflowInstance>.IndexKeys
+                        .Ascending(x => x.WorkflowDefinitionId)
+                        .Ascending(x => x.Status),
+                    new CreateIndexOptions { Background = true, Name = "idx_workflowdefidstatus" }));
+                
+                // Events indexes
+                instance.Events.Indexes.CreateOne(new CreateIndexModel<Event>(
+                    Builders<Event>.IndexKeys
+                        .Ascending(x => x.EventName)
+                        .Ascending(x => x.EventKey),
+                    new CreateIndexOptions { Background = true, Name = "idx_namekey" }));
+                
                 instance.Events.Indexes.CreateOne(new CreateIndexModel<Event>(
                     Builders<Event>.IndexKeys
                         .Ascending(x => x.EventName)
                         .Ascending(x => x.EventKey)
                         .Ascending(x => x.EventTime),
-                    new CreateIndexOptions { Background = true, Name = "idx_namekey" }));
+                    new CreateIndexOptions { Background = true, Name = "idx_namekeytime" }));
 
                 instance.Events.Indexes.CreateOne(new CreateIndexModel<Event>(
                     Builders<Event>.IndexKeys.Ascending(x => x.IsProcessed),
                     new CreateIndexOptions { Background = true, Name = "idx_processed" }));
+                
+                instance.Events.Indexes.CreateOne(new CreateIndexModel<Event>(
+                    Builders<Event>.IndexKeys
+                        .Ascending(x => x.EventName)
+                        .Ascending(x => x.EventKey)
+                        .Ascending(x => x.IsProcessed),
+                    new CreateIndexOptions { Background = true, Name = "idx_namekeyprocessed" }));
 
+                
+                // Subscriptions indexes
                 instance.EventSubscriptions.Indexes.CreateOne(new CreateIndexModel<EventSubscription>(
                     Builders<EventSubscription>.IndexKeys
                         .Ascending(x => x.EventName)
                         .Ascending(x => x.EventKey),
                     new CreateIndexOptions { Background = true, Name = "idx_namekey" }));
 
+                instance.EventSubscriptions.Indexes.CreateOne(new CreateIndexModel<EventSubscription>(
+                    Builders<EventSubscription>.IndexKeys
+                        .Ascending(x => x.WorkflowId),
+                new CreateIndexOptions { Background = true, Name = "idx_workflowid" }));
+                
+                
+                // ScheduledCommands indexes
                 instance.ScheduledCommands.Indexes.CreateOne(new CreateIndexModel<ScheduledCommand>(
                     Builders<ScheduledCommand>.IndexKeys
                         .Descending(x => x.ExecuteTime),
