@@ -213,36 +213,6 @@ namespace Conductor.Domain.Services
 
                 step.Outputs.Add(new ActionParameter<IStepBody, object>(acn));
             }
-
-            if(!string.IsNullOrEmpty(source.NextStepId))
-            {
-                Action<IStepBody, object> acn = (pStep, pData) =>
-                {
-                    object resolvedValue = _scriptHost.EvaluateExpression($"data.ExecutionTimestamps_{source.NextStepId} if hasattr(data, 'ExecutionTimestamps_{source.NextStepId}') else time.time()", new Dictionary<string, object>()
-                    {
-                        ["step"] = pStep,
-                        ["data"] = pData
-                    });
-                    (pData as IDictionary<string, object>)[$"ExecutionTimestamps_{source.NextStepId}"] = resolvedValue;
-                };
-
-                step.Outputs.Add(new ActionParameter<IStepBody, object>(acn));
-            }
-
-            foreach (var nextStep in source.SelectNextStep)
-            {
-                Action<IStepBody, object> acn = (pStep, pData) =>
-                {
-                    object resolvedValue = _scriptHost.EvaluateExpression($"data.ExecutionTimestamps_{nextStep.Key} if hasattr(data, 'ExecutionTimestamps_{nextStep.Key}') else time.time()", new Dictionary<string, object>()
-                    {
-                        ["step"] = pStep,
-                        ["data"] = pData
-                    });
-                    (pData as IDictionary<string, object>)[$"ExecutionTimestamps_{nextStep.Key}"] = resolvedValue;
-                };
-
-                step.Outputs.Add(new ActionParameter<IStepBody, object>(acn));
-            }
         }
 
         private void AttachOutcomes(Step source, Type dataType, WorkflowStep step)
