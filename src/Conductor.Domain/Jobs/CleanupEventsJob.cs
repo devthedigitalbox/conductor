@@ -5,12 +5,12 @@ using Quartz;
 
 namespace Conductor.Domain.Services
 {
-    public class TerminateDanglingSubscriptionsJob: IJob
+    public class CleanupEventsJob: IJob
     {
-        private readonly ISubscriptionsRepository _repository;
+        private readonly IEventsRepository _repository;
         private readonly ILogger _logger;
 
-        public TerminateDanglingSubscriptionsJob(ISubscriptionsRepository repository, ILoggerFactory loggerFactory)
+        public CleanupEventsJob(IEventsRepository repository, ILoggerFactory loggerFactory)
         {
             _repository = repository;
             _logger = loggerFactory.CreateLogger(GetType());
@@ -18,8 +18,8 @@ namespace Conductor.Domain.Services
         
         public Task Execute(IJobExecutionContext context)
         {
-            _logger.LogInformation("Terminating Dangling Subscriptions");
-            return _repository.TerminateOrphans();
+            _logger.LogInformation("Cleanup Events");
+            return _repository.Cleanup();
         }
     }
 }

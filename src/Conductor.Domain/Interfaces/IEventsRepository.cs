@@ -2,8 +2,8 @@
 
 namespace Conductor.Domain.Interfaces
 {
-    public interface ISubscriptionsRepository
+    public interface IEventsRepository
     {
-        Task TerminateOrphans();
+        Task Cleanup();
     }
 }

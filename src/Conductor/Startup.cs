@@ -170,6 +170,11 @@ namespace Conductor
                     .StartAt(DateBuilder.TodayAt(3, 0, 0))
                     .WithSimpleSchedule(x => x.WithIntervalInHours(24).RepeatForever())
                 );
+                q.ScheduleJob<CleanupEventsJob>(trigger => trigger
+                    .WithIdentity("CleanupEventsJob")
+                    .StartAt(DateBuilder.TodayAt(3, 0, 0))
+                    .WithSimpleSchedule(x => x.WithIntervalInHours(24).RepeatForever())
+                );
             });
             
             services.AddQuartzHostedService(options =>

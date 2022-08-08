@@ -1,16 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using Conductor.Domain.Interfaces;
-using Conductor.Domain.Models;
 using Conductor.Storage.Models;
-using MongoDB.Bson.Serialization;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
 using WorkflowCore.Models;
 using System.Threading.Tasks;
 
@@ -20,7 +12,7 @@ namespace Conductor.Storage.Services
     {
         private readonly IMongoDatabase _database;
 
-        private IMongoCollection<WorkflowInstance> _collection => _database.GetCollection<WorkflowInstance>("Subscriptions");
+        private IMongoCollection<EventSubscription> _collection => _database.GetCollection<EventSubscription>("Subscriptions");
 
         static SubscriptionsRepository() { }
 
@@ -29,7 +21,7 @@ namespace Conductor.Storage.Services
             _database = database;
         }
         
-        public async Task TerminateDanglingSubscriptions()
+        public async Task TerminateOrphans()
         {
             var pipeline = new[]
             {

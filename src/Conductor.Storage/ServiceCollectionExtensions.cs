@@ -1,5 +1,4 @@
-﻿using System;
-using Conductor.Domain.Interfaces;
+﻿using Conductor.Domain.Interfaces;
 using Conductor.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -17,6 +16,7 @@ namespace Conductor.Storage
             services.AddTransient<IResourceRepository, ResourceRepository>(x => new ResourceRepository(db));
             services.AddTransient<IWorkflowBulkRepository, WorkflowBulkRepository>(x => new WorkflowBulkRepository(db));
             services.AddTransient<ISubscriptionsRepository, SubscriptionsRepository>(x => new SubscriptionsRepository(db));
+            services.AddTransient<IEventsRepository, EventsRepository>(x => new EventsRepository(db));
         }
 
         public static WorkflowOptions UseMongoDB(this WorkflowOptions options, string mongoUrl, string databaseName)
