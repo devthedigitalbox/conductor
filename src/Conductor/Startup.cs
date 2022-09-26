@@ -103,6 +103,7 @@ namespace Conductor
 
             services.AddWorkflow(cfg =>
             {
+                cfg.EnableEvents = false;
                 if (pollingInterval.HasValue)
                 {
                     cfg.UsePollInterval(TimeSpan.FromSeconds(pollingInterval.Value));
