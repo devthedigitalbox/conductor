@@ -17,9 +17,9 @@ namespace Conductor.Domain
             services.AddSingleton<IExpressionEvaluator, ExpressionEvaluator>();
             services.AddSingleton<IEventBulkService, EventBulkService>();
             services.AddSingleton<IWorkflowBulkService, WorkflowBulkService>();
-            services.AddSingleton<IWorkflowController, WorkflowController>();
-            services.AddTransient<CustomStep>();
+            services.Replace(new ServiceDescriptor(typeof(IWorkflowController), typeof(WorkflowController), ServiceLifetime.Singleton));
             services.AddTransient<IBackgroundTask, EventConsumer>();
+            services.AddTransient<CustomStep>();
         }
     }
 }
