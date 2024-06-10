@@ -32,6 +32,7 @@ using MassTransit;
 using Microsoft.OpenApi.Models;
 using Quartz;
 using RabbitMQ.Client;
+//alert: version added WorkFlow Core 3.6
 
 namespace Conductor
 {
