@@ -89,6 +89,7 @@ namespace Conductor.Domain.Services
             finally
             {
                 await _lockProvider.ReleaseLock($"evt:{itemId}");
+                await _eventRepository.MarkEventUnqueued(itemId, cancellationToken);
             }
         }
         

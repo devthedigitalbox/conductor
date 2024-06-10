@@ -67,6 +67,7 @@ namespace Conductor.Storage.Services
                 x.MapProperty(y => y.EventData);
                 x.MapProperty(y => y.EventTime);
                 x.MapProperty(y => y.IsProcessed);
+                x.MapProperty(y => y.IsQueued);
             });
 
             BsonClassMap.RegisterClassMap<ControlPersistenceData>(x => x.AutoMap());
@@ -177,7 +178,12 @@ namespace Conductor.Storage.Services
             return workflow.Id;
         }
 
-        public async Task PersistWorkflow(WorkflowInstance workflow, CancellationToken cancellationToken = default)
+        public async Task PersistWorkflow(WorkflowInstance workflow ,CancellationToken cancellationToken = default)
+        {
+            await WorkflowInstances.ReplaceOneAsync(x => x.Id == workflow.Id, workflow, cancellationToken: cancellationToken);
+        }
+
+        public async Task PersistWorkflow(WorkflowInstance workflow, List<EventSubscription> subscriptions, CancellationToken cancellationToken = default)
         {
             await WorkflowInstances.ReplaceOneAsync(x => x.Id == workflow.Id, workflow, cancellationToken: cancellationToken);
         }
@@ -272,6 +278,10 @@ namespace Conductor.Storage.Services
                 .SortBy(x => x.EventTime)
                 .Project(x => x.Id);
 
+            var updateIsQueued = Builders<Event>.Update
+                            .Set(x => x.IsQueued, true);
+            var updated = Events.UpdateManyAsync(x => !x.IsProcessed && x.EventTime <= now, updateIsQueued, cancellationToken: cancellationToken);
+            
             return await query.ToListAsync(cancellationToken);
         }
 
@@ -297,6 +307,22 @@ namespace Conductor.Storage.Services
         {
             var update = Builders<Event>.Update
                 .Set(x => x.IsProcessed, false);
+
+            await Events.UpdateOneAsync(x => x.Id == id, update, cancellationToken: cancellationToken);
+        }
+
+        public async Task MarkEventQueued(string id, CancellationToken cancellationToken = default)
+        {
+            var update = Builders<Event>.Update
+                .Set(x => x.IsQueued, true);
+
+            await Events.UpdateOneAsync(x => x.Id == id, update, cancellationToken: cancellationToken);
+        }
+
+        public async Task MarkEventUnqueued(string id, CancellationToken cancellationToken = default)
+        {
+            var update = Builders<Event>.Update
+                .Set(x => x.IsQueued, false);
 
             await Events.UpdateOneAsync(x => x.Id == id, update, cancellationToken: cancellationToken);
         }

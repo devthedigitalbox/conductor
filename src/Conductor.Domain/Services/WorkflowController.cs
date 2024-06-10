@@ -119,6 +119,7 @@ namespace Conductor.Domain.Services
             evt.EventKey = eventKey;
             evt.EventName = eventName;
             evt.IsProcessed = false;
+            evt.IsQueued = false;
             await _persistenceStore.CreateEvent(evt);
         }
 
